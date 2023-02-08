@@ -13,4 +13,14 @@ pip install -r requirements.txt
 ```
 
 ## Running
-To come...
+### Evaluate a file
+```bash
+python -m wd-hydrus-tagger evaluate /path/to/file
+```
+Options:
+```
+  --cpu BOOLEAN      Use CPU instead of GPU
+  --model TEXT       The tagging model version to use
+  --threshold FLOAT  The threshhold to drop tags below
+  --help             Show this message and exit.
+```
