@@ -1,4 +1,4 @@
-# wd1.4-hydrus-tagger
+# wd-hydrus-tagger
 wd1.4-hydrus-tagger is a tool that uses the [Hydrus Network](https://github.com/hydrusnetwork/hydrus) API to tag your archived images with [the WD 1.4 Tagger model](https://huggingface.co/SmilingWolf/wd-v1-4-vit-tagger-v2).
 
 ![An example of the evaluate command using a familair toy.](docs/example.png)
