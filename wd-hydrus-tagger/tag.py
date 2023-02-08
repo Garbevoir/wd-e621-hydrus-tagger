@@ -25,6 +25,7 @@ if use_cpu:
 else:
     tf_device_name = '/gpu:0'
 
+
 class Interrogator:
     @staticmethod
     def postprocess_tags(
@@ -105,6 +106,7 @@ class Interrogator:
         Dict[str, float]  # tag confidents
     ]:
         raise NotImplementedError()
+
 
 class WaifuDiffusionInterrogator(Interrogator):
     def __init__(

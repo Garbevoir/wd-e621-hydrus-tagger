@@ -2,6 +2,7 @@ import importlib
 import sys
 import subprocess
 
+
 def is_installed(package):
     try:
         spec = importlib.util.find_spec(package)
@@ -10,6 +11,7 @@ def is_installed(package):
 
     return spec is not None
 
+
 def run_pip(args, desc=None):
     if skip_install:
         return
@@ -17,12 +19,14 @@ def run_pip(args, desc=None):
     index_url_line = f' --index-url {index_url}' if index_url != '' else ''
     return run(f'"{python}" -m pip {args} --prefer-binary{index_url_line}', desc=f"Installing {desc}", errdesc=f"Couldn't install {desc}")
 
+
 def run(command, desc=None, errdesc=None, custom_env=None, live=False):
     if desc is not None:
         print(desc)
 
     if live:
-        result = subprocess.run(command, shell=True, env=os.environ if custom_env is None else custom_env)
+        result = subprocess.run(
+            command, shell=True, env=os.environ if custom_env is None else custom_env)
         if result.returncode != 0:
             raise RuntimeError(f"""{errdesc or 'Error running command'}.
 Command: {command}
@@ -30,7 +34,8 @@ Error code: {result.returncode}""")
 
         return ""
 
-    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, env=os.environ if custom_env is None else custom_env)
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            shell=True, env=os.environ if custom_env is None else custom_env)
 
     if result.returncode != 0:
 
