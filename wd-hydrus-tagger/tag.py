@@ -15,10 +15,7 @@ from . import dbimutils
 from . import onnx_loader
 
 tag_escape_pattern = re.compile(r'([\\()])')
-skip_install = False
 use_cpu = True
-index_url = os.environ.get('INDEX_URL', "")
-python = sys.executable
 
 if use_cpu:
     tf_device_name = '/cpu:0'

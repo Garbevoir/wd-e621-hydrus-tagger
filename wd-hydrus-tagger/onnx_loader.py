@@ -1,6 +1,11 @@
 import importlib
 import sys
 import subprocess
+import os
+
+skip_install = False
+index_url = os.environ.get('INDEX_URL', "")
+python = sys.executable
 
 
 def is_installed(package):
