@@ -1,12 +1,9 @@
 import os
-import gc
 import pandas as pd
 import numpy as np
 import re
-import sys
 
-from typing import Tuple, List, Dict
-from io import BytesIO
+from typing import Tuple, Dict
 from PIL import Image
 from pathlib import Path
 from huggingface_hub import hf_hub_download
@@ -23,97 +20,15 @@ else:
     tf_device_name = '/gpu:0'
 
 
-class Interrogator:
-    @staticmethod
-    def postprocess_tags(
-        tags: Dict[str, float],
-
-        threshold=0.35,
-        additional_tags: List[str] = [],
-        exclude_tags: List[str] = [],
-        sort_by_alphabetical_order=False,
-        add_confident_as_weight=False,
-        replace_underscore=False,
-        replace_underscore_excludes: List[str] = [],
-        escape_tag=False
-    ) -> Dict[str, float]:
-        for t in additional_tags:
-            tags[t] = 1.0
-
-        # those lines are totally not "pythonic" but looks better to me
-        tags = {
-            t: c
-
-            # sort by tag name or confident
-            for t, c in sorted(
-                tags.items(),
-                key=lambda i: i[0 if sort_by_alphabetical_order else 1],
-                reverse=not sort_by_alphabetical_order
-            )
-
-            # filter tags
-            if (
-                c >= threshold
-                and t not in exclude_tags
-            )
-        }
-
-        new_tags = []
-        for tag in list(tags):
-            new_tag = tag
-
-            if replace_underscore and tag not in replace_underscore_excludes:
-                new_tag = new_tag.replace('_', ' ')
-
-            if escape_tag:
-                new_tag = tag_escape_pattern.sub(r'\\\1', new_tag)
-
-            if add_confident_as_weight:
-                new_tag = f'({new_tag}:{tags[tag]})'
-
-            new_tags.append((new_tag, tags[tag]))
-        tags = dict(new_tags)
-
-        return tags
-
-    def __init__(self, name: str) -> None:
-        self.name = name
-
-    def load(self):
-        raise NotImplementedError()
-
-    def unload(self) -> bool:
-        unloaded = False
-
-        if hasattr(self, 'model') and self.model is not None:
-            del self.model
-            unloaded = True
-            print(f'Unloaded {self.name}')
-
-        if hasattr(self, 'tags'):
-            del self.tags
-
-        return unloaded
-
-    def interrogate(
-        self,
-        image: Image
-    ) -> Tuple[
-        Dict[str, float],  # rating confidents
-        Dict[str, float]  # tag confidents
-    ]:
-        raise NotImplementedError()
-
-
-class WaifuDiffusionInterrogator(Interrogator):
+class WaifuDiffusionInterrogator:
     def __init__(
-        self,
-        name: str,
-        model_path='model.onnx',
-        tags_path='selected_tags.csv',
-        **kwargs
+            self,
+            name: str,
+            model_path='model.onnx',
+            tags_path='selected_tags.csv',
+            **kwargs
     ) -> None:
-        super().__init__(name)
+        self.name = name
         self.model_path = model_path
         self.tags_path = tags_path
         self.kwargs = kwargs
@@ -127,7 +42,7 @@ class WaifuDiffusionInterrogator(Interrogator):
             **self.kwargs, filename=self.tags_path))
         return model_path, tags_path
 
-    def load(self) -> None:
+    def load(self, cpu) -> None:
         model_path, tags_path = self.download()
 
         # only one of these packages should be installed at a time in any one environment
@@ -146,7 +61,7 @@ class WaifuDiffusionInterrogator(Interrogator):
         # https://onnxruntime.ai/docs/execution-providers/
         # https://github.com/toriato/stable-diffusion-webui-wd14-tagger/commit/e4ec460122cf674bbf984df30cdb10b4370c1224#r92654958
         providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
-        if use_cpu:
+        if cpu:
             providers.pop(0)
 
         self.model = InferenceSession(str(model_path), providers=providers)
@@ -156,8 +71,8 @@ class WaifuDiffusionInterrogator(Interrogator):
         self.tags = pd.read_csv(tags_path)
 
     def interrogate(
-        self,
-        image: Image
+            self,
+            image: Image
     ) -> Tuple[
         Dict[str, float],  # rating confidents
         Dict[str, float]  # tag confidents

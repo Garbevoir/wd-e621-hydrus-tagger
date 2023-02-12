@@ -6,6 +6,7 @@ filelock==3.9.0
 flatbuffers==23.1.21
 huggingface-hub==0.12.0
 humanfriendly==10.0
+hydrus-api==4.0.0
 idna==3.4
 imageio==2.25.0
 modules==1.0.0
