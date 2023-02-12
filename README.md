@@ -19,7 +19,7 @@ pip install -r requirements.txt
 ```bash
 python -m wd-hydrus-tagger evaluate /path/to/file
 ```
-Options:
+#### Options:
 ```
   --cpu BOOLEAN      Use CPU instead of GPU
   --model TEXT       The tagging model version to use
@@ -30,7 +30,22 @@ Options:
 ```bash
 python -m wd-hydrus-tagger evaluate-api --token your_hydrus_token 123_your_files_hash_456
 ```
-Options:
+#### Options:
+```
+  --token TEXT       The API token for your Hydrus server
+  --cpu BOOLEAN      Use CPU instead of GPU
+  --model TEXT       The tagging model version to use
+  --threshold FLOAT  The threshhold to drop tags below
+  --host TEXT        The URL for your Hydrus server
+```
+
+### Evaluate a number of files in Hydrus
+```bash
+python -m wd-hydrus-tagger evaluate-api --token your_hydrus_token hashes.txt
+```
+Where hashes.txt is a file containing one Hydrus file hash per line.
+
+#### Options:
 ```
   --token TEXT       The API token for your Hydrus server
   --cpu BOOLEAN      Use CPU instead of GPU
