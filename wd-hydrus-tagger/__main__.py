@@ -79,7 +79,8 @@ def evaluate_api(hash, token, cpu, model, threshold, host):
 @click.option("--model", default="SmilingWolf/wd-v1-4-vit-tagger-v2", help="The tagging model version to use")
 @click.option("--threshold", default=0.35, help="The threshhold to drop tags below")
 @click.option("--host", default="http://127.0.0.1:45869", help="The URL for your Hydrus server ")
-def evaluate_api_batch(hashfile, token, cpu, model, threshold, host):
+@click.option("--tag-service", default="my tags", help="The Hydrus tag service to add tags to")
+def evaluate_api_batch(hashfile, token, cpu, model, threshold, host, tag_service):
     if not os.path.isfile(hashfile):
         raise ValueError("hashfile not found")
     integerator = interrogate.WaifuDiffusionInterrogator(
@@ -92,25 +93,24 @@ def evaluate_api_batch(hashfile, token, cpu, model, threshold, host):
     with open(hashfile) as hashfile_f:
         hashes = hashfile_f.readlines()
 
-    for hash in hashes:
-        click.echo(hash)
-        image_bytes = BytesIO(client.get_file(hash).content)
-        image = Image.open(image_bytes)
-        ratings, tags = integerator.interrogate(image)
-        rating = "general"
-        for key in ratings.keys():
-            if ratings[key] > ratings[rating]:
-                rating = key
-        clipped_tags = []
-        for key in tags.keys():
-            if (tags[key] > threshold):
-                clipped_tags.append(key.replace("_", " "))
-        click.echo("rating: " + rating)
-        click.echo("tags: " + ",".join(clipped_tags))
-        clipped_tags.append("rating:" + rating)
-        client.add_tags(hashes=[hash], service_names_to_tags={
-            "my tags": clipped_tags
-        })
+    with click.progressbar(hashes) as bar:
+        for hash in bar:
+            click.echo(" processing: "+ hash)
+            image_bytes = BytesIO(client.get_file(hash).content)
+            image = Image.open(image_bytes)
+            ratings, tags = integerator.interrogate(image)
+            rating = "general"
+            for key in ratings.keys():
+                if ratings[key] > ratings[rating]:
+                    rating = key
+            clipped_tags = []
+            for key in tags.keys():
+                if (tags[key] > threshold):
+                    clipped_tags.append(key.replace("_", " "))
+            clipped_tags.append("rating:" + rating)
+            client.add_tags(hashes=[hash], service_names_to_tags={
+                tag_service: clipped_tags
+            })
 
 
 if __name__ == '__main__':
