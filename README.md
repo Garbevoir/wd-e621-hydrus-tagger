@@ -41,7 +41,7 @@ python -m wd-hydrus-tagger evaluate-api --token your_hydrus_token 123_your_files
 
 ### Evaluate a number of files in Hydrus
 ```bash
-python -m wd-hydrus-tagger evaluate-api --token your_hydrus_token hashes.txt
+python -m wd-hydrus-tagger evaluate-api-batch --token your_hydrus_token hashes.txt
 ```
 Where hashes.txt is a file containing one Hydrus file hash per line.
 
