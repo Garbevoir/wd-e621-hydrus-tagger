@@ -1,0 +1,1 @@
+python -m ratings-hydrus-tagger evaluate-api-batch --token REPLACE_WITH_API_KEY --tag-service "A.I. Tags" --cpu 1 hashes.txt

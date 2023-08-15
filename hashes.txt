@@ -1,0 +1,1 @@
+Put your hashes here. Make sure to delete this text, as well as all instances of "sha:256" before running the tool. You can do this easily from notepad by going to Edit > Replace, typing "sha256: in "Find what:", making sure "Replace with:" is blank, and clicking "Replace All".
