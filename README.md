@@ -90,7 +90,7 @@ You can also delete the Z3D-E621-Convnext folder from the models folder if not n
 
 My personal workflow is to have a hydrus search page that excludes all AI tags, filters to only PNG/JPG/WEBP images, and only images with less than 10 tags already (to avoid tagging already well-tagged files.) I also limit the results to around 2048 images, since that takes roughly an hour to process on my system.
 After tagging EVERYTHING with wd.bat, there will be some files that have been tagged with "furry" or "female furry"
-I then have another search page that collects all these newly identified furry files, and I run e621.bat on them after a suffient amount is identified.
+I then have another search page that collects all these newly identified furry files, and I run e621.bat on them after a sufficient amount is identified.
 
 I personally don't understand the difference between the different ViT/Convnext/MOAT tagging models, and since ViT was the default included with the tool, it's what I've been using.
 If you prefer a different model for some reason, then just replace the "model.onnx" and "selected_tags.csv" files in the "wd-v1-4-vit-tagger-v2" folder with the ones you downloaded. I don't recommend renaming the folder, since the program looks specifically for the "wd-v1-4-vit-tagger-v2" folder to find the model.
