@@ -82,6 +82,8 @@ ratings.bat runs the normal wd model which DOES tag ratings, but discards all ta
 It's recommended to run ratings.bat AFTER running e621.bat so that furry art can be tagged with more accurate tags as well as a rating tag.
 Note that this is UNNECESSARY if wd.bat is ran on the file FIRST, as it will already have a rating tag.
 
+you can have wd-hydrus-tagger discard all tags except for content ratings by adding "--ratings-only 1" to the command. This is what ratings.bat does. you can also use this for evaluate-api as well for individual hashes.
+
 All modules have been edited to automatically add an "ai generated tags" tag to the file thats specific to which tagger was run.
 All .bat files use evaluate-api-batch, meaning to check individual files you MUST use hashes.txt.
 
