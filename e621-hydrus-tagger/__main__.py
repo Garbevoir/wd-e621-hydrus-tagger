@@ -45,7 +45,8 @@ def evaluate(filename, cpu, model, threshold):
 @click.option("--model", default="SmilingWolf/wd-v1-4-vit-tagger-v2", help="The tagging model version to use")
 @click.option("--threshold", default=0.35, help="The threshhold to drop tags below")
 @click.option("--host", default="http://127.0.0.1:45869", help="The URL for your Hydrus server ")
-def evaluate_api(hash, token, cpu, model, threshold, host):
+@click.option("--tag-service", default="my tags", help="The Hydrus tag service to add tags to")
+def evaluate_api(hash, token, cpu, model, threshold, host, tag_service):
     integerator = interrogate.WaifuDiffusionInterrogator(
         'wd14-vit-v2',
         repo_id=model,
@@ -55,20 +56,16 @@ def evaluate_api(hash, token, cpu, model, threshold, host):
     client = hydrus_api.Client(token, host)
     image_bytes = BytesIO(client.get_file(hash).content)
     image = Image.open(image_bytes)
-    ratings, tags = integerator.interrogate(image)
-    rating = "general"
-    for key in ratings.keys():
-        if ratings[key] > ratings[rating]:
-            rating = key
+    tags = integerator.interrogate(image)
+
     clipped_tags = []
     for key in tags.keys():
         if (tags[key] > threshold):
             clipped_tags.append(key.replace("_", " "))
-    click.echo("rating: " + rating)
     click.echo("tags: " + ",".join(clipped_tags))
-    clipped_tags.append("rating:" + rating)
+    clipped_tags.append("e621-hydrus-tagger ai generated tags")
     client.add_tags(hashes=[hash], service_names_to_tags={
-        "my tags": clipped_tags
+                tag_service: clipped_tags
     })
 
 
