@@ -45,7 +45,9 @@ def evaluate(filename, cpu, model, threshold):
 @click.option("--model", default="SmilingWolf/wd-v1-4-vit-tagger-v2", help="The tagging model version to use")
 @click.option("--threshold", default=0.35, help="The threshhold to drop tags below")
 @click.option("--host", default="http://127.0.0.1:45869", help="The URL for your Hydrus server ")
-def evaluate_api(hash, token, cpu, model, threshold, host):
+@click.option("--tag-service", default="my tags", help="The Hydrus tag service to add tags to")
+@click.option("--ratings-only", default=False, help="Strip all tags except for content rating")
+def evaluate_api(hash, token, cpu, model, threshold, host, tag_service, ratings_only):
     integerator = interrogate.WaifuDiffusionInterrogator(
         'wd14-vit-v2',
         repo_id=model,
@@ -61,14 +63,19 @@ def evaluate_api(hash, token, cpu, model, threshold, host):
         if ratings[key] > ratings[rating]:
             rating = key
     clipped_tags = []
-    for key in tags.keys():
-        if (tags[key] > threshold):
-            clipped_tags.append(key.replace("_", " "))
+    if not ratings_only:
+        for key in tags.keys():
+            if (tags[key] > threshold):
+                clipped_tags.append(key.replace("_", " "))
     click.echo("rating: " + rating)
     click.echo("tags: " + ",".join(clipped_tags))
     clipped_tags.append("rating:" + rating)
+    if ratings_only:
+        clipped_tags.append("ratings-hydrus-tagger ai generated tags")
+    else:
+        clipped_tags.append("wd-hydrus-tagger ai generated tags")
     client.add_tags(hashes=[hash], service_names_to_tags={
-        "my tags": clipped_tags
+        tag_service: clipped_tags
     })
 
 
@@ -80,7 +87,8 @@ def evaluate_api(hash, token, cpu, model, threshold, host):
 @click.option("--threshold", default=0.35, help="The threshhold to drop tags below")
 @click.option("--host", default="http://127.0.0.1:45869", help="The URL for your Hydrus server ")
 @click.option("--tag-service", default="my tags", help="The Hydrus tag service to add tags to")
-def evaluate_api_batch(hashfile, token, cpu, model, threshold, host, tag_service):
+@click.option("--ratings-only", default=False, help="Strip all tags except for content rating")
+def evaluate_api_batch(hashfile, token, cpu, model, threshold, host, tag_service, ratings_only):
     if not os.path.isfile(hashfile):
         raise ValueError("hashfile not found")
     integerator = interrogate.WaifuDiffusionInterrogator(
@@ -104,11 +112,15 @@ def evaluate_api_batch(hashfile, token, cpu, model, threshold, host, tag_service
                 if ratings[key] > ratings[rating]:
                     rating = key
             clipped_tags = []
-            for key in tags.keys():
-                if (tags[key] > threshold):
-                    clipped_tags.append(key.replace("_", " "))
+            if not ratings_only:
+                for key in tags.keys():
+                    if (tags[key] > threshold):
+                        clipped_tags.append(key.replace("_", " "))
             clipped_tags.append("rating:" + rating)
-            clipped_tags.append("wd-hydrus-tagger ai generated tags")
+            if ratings_only:
+                clipped_tags.append("ratings-hydrus-tagger ai generated tags")
+            else:
+                clipped_tags.append("wd-hydrus-tagger ai generated tags")
             client.add_tags(hashes=[hash], service_names_to_tags={
                 tag_service: clipped_tags
             })
