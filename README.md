@@ -83,13 +83,13 @@ It's recommended to run ratings.bat AFTER running e621.bat so that furry art can
 Note that this is UNNECESSARY if wd.bat is ran on the file FIRST, as it will already have a rating tag.
 
 All modules have been edited to automatically add an "ai generated tags" tag to the file thats specific to which tagger was run.
-All .bat files use evaluate-api-batch, meaning to check individual files you MUST use hashes.txt or else risk breaking something. I haven't done any editing (that I remember) on the other methods of tagging files (evaluate and evaluate-api), and I recommend you re-download the original program from the original developer if you wish to use those features.
+All .bat files use evaluate-api-batch, meaning to check individual files you MUST use hashes.txt.
 
-If you don't need furry or rating tagging capability, simply delete e621.bat/ratings.bat, as well as the e621-hydrus-tagger folder/ratings-hydrus-tagger folder
+If you don't need furry or rating tagging capability, simply delete e621.bat/ratings.bat, as well as the e621-hydrus-tagger folder folder
 You can also delete the Z3D-E621-Convnext folder from the models folder if not needed.
 
 My personal workflow is to have a hydrus search page that excludes all AI tags, filters to only PNG/JPG/WEBP images, and only images with less than 10 tags already (to avoid tagging already well-tagged files.) I also limit the results to around 2048 images, since that takes roughly an hour to process on my system.
-After tagging EVERYTHING with wd.bat, there will be some files that have been tagged with "furry" or "female furry"
+After tagging EVERYTHING with wd.bat, there will be some files that have been tagged with "furry" or "female furry".
 I then have another search page that collects all these newly identified furry files, and I run e621.bat on them after a sufficient amount is identified.
 
 I personally don't understand the difference between the different ViT/Convnext/MOAT tagging models, and since ViT was the default included with the tool, it's what I've been using.
