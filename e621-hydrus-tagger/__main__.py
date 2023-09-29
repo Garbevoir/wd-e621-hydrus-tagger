@@ -6,6 +6,7 @@ from . import interrogate
 import hydrus_api
 from io import BytesIO
 
+Image.MAX_IMAGE_PIXELS = None
 
 @click.group()
 def cli():
