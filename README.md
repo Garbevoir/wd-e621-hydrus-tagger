@@ -103,7 +103,7 @@ You can have each .bat send the tags to their own personal tag service if you'd 
 YOU MUST REBUILD THE VENV IF YOU MOVE OR RENAME THIS FOLDER
 
 # CREDITS:
-- SmilingWolf for the WD tagging models. (https://huggingface.co/SmilingWolf)
+- SmilingWolf for the WD tagging models as well as some simple code to detect Kaomojis. (https://huggingface.co/SmilingWolf)
 - Abtalerico for the well made original tool that I poorly edited to make this. (https://github.com/abtalerico/wd-hydrus-tagger
 - Zack3d (furzacky) for the E621 tagging model. (https://discord.com/channels/754509198674362388/1065785788698218526) (https://discord.gg/BDFpq9Yb7K)
 - Hydrus Dev for developing and improving hydrus nonstop for several years, the real G.O.A.T. (https://hydrusnetwork.github.io/hydrus/index.html)
