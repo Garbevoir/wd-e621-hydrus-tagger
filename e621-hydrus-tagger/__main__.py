@@ -8,6 +8,28 @@ from io import BytesIO
 
 Image.MAX_IMAGE_PIXELS = None
 
+kaomojis = [
+    "0_0",
+    "(o)_(o)",
+    "+_+",
+    "+_-",
+    "._.",
+    "<o>_<o>",
+    "<|>_<|>",
+    "=_=",
+    ">_<",
+    "3_3",
+    "6_9",
+    ">_o",
+    "@_@",
+    "^_^",
+    "o_o",
+    "u_u",
+    "x_x",
+    "|_|",
+    "||_||",
+]
+
 @click.group()
 def cli():
     pass
@@ -62,7 +84,7 @@ def evaluate_api(hash, token, cpu, model, threshold, host, tag_service):
     clipped_tags = []
     for key in tags.keys():
         if (tags[key] > threshold):
-            clipped_tags.append(key.replace("_", " "))
+            clipped_tags.append(key.replace("_", " ") if key not in kaomojis else key)
     click.echo("tags: " + ",".join(clipped_tags))
     clipped_tags.append("e621-hydrus-tagger ai generated tags")
     client.add_tags(hashes=[hash], service_names_to_tags={
@@ -101,7 +123,7 @@ def evaluate_api_batch(hashfile, token, cpu, model, threshold, host, tag_service
             clipped_tags = []
             for key in tags.keys():
                 if (tags[key] > threshold):
-                    clipped_tags.append(key.replace("_", " "))
+                    clipped_tags.append(key.replace("_", " ") if key not in kaomojis else key)
             clipped_tags.append("e621-hydrus-tagger ai generated tags")
             client.add_tags(hashes=[hash], service_names_to_tags={
                 tag_service: clipped_tags
