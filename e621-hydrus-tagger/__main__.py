@@ -69,7 +69,8 @@ def evaluate(filename, cpu, model, threshold):
 @click.option("--threshold", default=0.35, help="The threshhold to drop tags below")
 @click.option("--host", default="http://127.0.0.1:45869", help="The URL for your Hydrus server ")
 @click.option("--tag-service", default="my tags", help="The Hydrus tag service to add tags to")
-def evaluate_api(hash, token, cpu, model, threshold, host, tag_service):
+@click.option("--privacy", default=True, help="hides the tag output from the cli")
+def evaluate_api(hash, token, cpu, model, threshold, host, tag_service, privacy):
     integerator = interrogate.WaifuDiffusionInterrogator(
         'wd14-vit-v2',
         repo_id=model,
@@ -85,7 +86,8 @@ def evaluate_api(hash, token, cpu, model, threshold, host, tag_service):
     for key in tags.keys():
         if (tags[key] > threshold):
             clipped_tags.append(key.replace("_", " ") if key not in kaomojis else key)
-    click.echo("tags: " + ",".join(clipped_tags))
+    if not privacy:
+        click.echo("tags: " + ", ".join(clipped_tags))
     clipped_tags.append("e621-hydrus-tagger ai generated tags")
     client.add_tags(hashes=[hash], service_names_to_tags={
                 tag_service: clipped_tags
@@ -100,7 +102,8 @@ def evaluate_api(hash, token, cpu, model, threshold, host, tag_service):
 @click.option("--threshold", default=0.50, help="The threshhold to drop tags below")
 @click.option("--host", default="http://127.0.0.1:45869", help="The URL for your Hydrus server ")
 @click.option("--tag-service", default="my tags", help="The Hydrus tag service to add tags to")
-def evaluate_api_batch(hashfile, token, cpu, model, threshold, host, tag_service):
+@click.option("--privacy", default=True, help="hides the tag output from the cli")
+def evaluate_api_batch(hashfile, token, cpu, model, threshold, host, tag_service,privacy):
     if not os.path.isfile(hashfile):
         raise ValueError("hashfile not found")
     integerator = interrogate.WaifuDiffusionInterrogator(
@@ -124,6 +127,9 @@ def evaluate_api_batch(hashfile, token, cpu, model, threshold, host, tag_service
             for key in tags.keys():
                 if (tags[key] > threshold):
                     clipped_tags.append(key.replace("_", " ") if key not in kaomojis else key)
+            if not privacy:
+                click.echo("tags: " + ", ".join(clipped_tags))
+                click.echo()
             clipped_tags.append("e621-hydrus-tagger ai generated tags")
             client.add_tags(hashes=[hash], service_names_to_tags={
                 tag_service: clipped_tags
