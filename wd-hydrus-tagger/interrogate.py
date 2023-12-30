@@ -6,7 +6,6 @@ import re
 from typing import Tuple, Dict
 from PIL import Image
 from pathlib import Path
-from huggingface_hub import hf_hub_download
 
 from . import dbimutils
 from . import onnx_loader
@@ -24,24 +23,30 @@ class WaifuDiffusionInterrogator:
     def __init__(
             self,
             name: str,
-            model_path='model.onnx',
-            tags_path='selected_tags.csv',
+            model_file: str,
+            tags_file: str,
+            folder: str,
+            ratingsflag: bool,
+            numberofratings: int,
             **kwargs
     ) -> None:
         self.name = name
-        self.model_path = model_path
-        self.tags_path = tags_path
+        self.model_file = model_file
+        self.tags_file = tags_file
+        self.folder = folder
+        self.ratingsflag = ratingsflag
+        self.numberofratings = numberofratings
         self.kwargs = kwargs
 
-    def download(self) -> Tuple[os.PathLike, os.PathLike]:
+    def findpaths(self) -> Tuple[os.PathLike, os.PathLike]:
         print(f"Loading {self.name} model file from {self.kwargs['repo_id']}")
 
-        model_path = Path('./model/wd-v1-4-vit-tagger-v2/model.onnx')
-        tags_path = Path('./model/wd-v1-4-vit-tagger-v2/selected_tags.csv')
-        return model_path, tags_path
+        model_file = Path('./model/' + self.folder + '/' + self.model_file)
+        tags_file = Path('./model/' + self.folder + '/' + self.tags_file)
+        return model_file, tags_file
 
-    def load(self, cpu) -> None:
-        model_path, tags_path = self.download()
+    def load(self, cpu) -> None:                             #im pretty sure this just checks for the right onnx runtime package and downloads it if its missing, no clue why this cant be done on initial setup
+        model_file, tags_file = self.findpaths()
 
         # only one of these packages should be installed at a time in any one environment
         # https://onnxruntime.ai/docs/get-started/with-python.html#install-onnx-runtime
@@ -62,11 +67,11 @@ class WaifuDiffusionInterrogator:
         if cpu:
             providers.pop(0)
 
-        self.model = InferenceSession(str(model_path), providers=providers)
+        self.model = InferenceSession(str(model_file), providers=providers)
 
-        print(f'Loaded {self.name} model from {model_path}')
+        print(f'Loaded {self.name} model from {model_file}')
 
-        self.tags = pd.read_csv(tags_path)
+        self.tags = pd.read_csv(tags_file)
 
     def interrogate(
             self,
@@ -108,11 +113,14 @@ class WaifuDiffusionInterrogator:
 
         tags = self.tags[:][['name']]
         tags['confidents'] = confidents[0]
+        if self.ratingsflag:
+            # first X items are for rating
+            ratings = dict(tags[:self.numberofratings].values)
 
-        # first 4 items are for rating (general, sensitive, questionable, explicit)
-        ratings = dict(tags[:4].values)
-
-        # rest are regular tags
-        tags = dict(tags[4:].values)
+            # rest are regular tags
+            tags = dict(tags[self.numberofratings:].values)
+        else: 
+            tags = dict(tags.values) # all tags are regular tags
+            ratings = None
 
         return ratings, tags
