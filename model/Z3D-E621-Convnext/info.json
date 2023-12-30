@@ -1,0 +1,8 @@
+{
+	"modelname": "Z3D E621 Convnext Tagger",
+	"source": "Zack3d (The Gooey Pack)",
+	"modelfile": "Z3D-E621-Convnext.onnx",
+	"tagsfile": "tags-selected.csv",
+	"ratingsflag": 0,
+	"numberofratings": 0
+}
