@@ -132,10 +132,10 @@ Where hashes.txt is a file containing one Hydrus file hash per line.
 Everything has been edited to work on a Windows 10 Pro installation. Your mileage may vary on other operating systems.
 If you do run into problems on other operating systems, the culprit is likely in interrogate.py, specifically where path() is invoked or it's something to do with the .bat files and how they're written.
 
-e621.bat uses an e621 model that doesn't tag ratings.
-ratings.bat runs the normal wd model which DOES tag ratings, but discards all tags except for the ratings.
+e621.bat uses an e621 model that doesn't tag content ratings but should provide much more accurate tags for furry artwork. For example, where an anthropomorphic dragon would be tagged "demon girl" by the WD tagger, e621 will properly recognize it as an anthropomorphic dragon and tag it as such.
+ratings.bat runs the normal WD model which DOES tag ratings, but discards all tags except for the ratings.
 It's recommended to run ratings.bat AFTER running e621.bat so that furry art can be tagged with more accurate tags as well as a rating tag.
-Note that this is UNNECESSARY if wd.bat is ran on the file FIRST, as it will already have a rating tag. (unless you decide to delete the wd tags afterwards
+Note that this is UNNECESSARY if wd.bat is ran on the file FIRST, as it will already have a rating tag. (unless you decide to delete the WD tags afterwards)
 
 All modules have been edited to automatically add an "ai generated tags" tag to the file thats specific to which tagger was run.
 All .bat files use evaluate-api-batch, meaning to check individual files you MUST use hashes.txt or enter the command yourself.
@@ -161,7 +161,7 @@ Python 3.12 seems to have severely broken some of the dependencies used by this 
 YOU MUST REBUILD THE VENV IF YOU MOVE OR RENAME THIS FOLDER
 
 # CREDITS:
-- SmilingWolf for the WD tagging models. (https://huggingface.co/SmilingWolf)
+- SmilingWolf for the WD tagging models as well as some simple code to detect Kaomojis. (https://huggingface.co/SmilingWolf)
 - Abtalerico for the well made original tool that I poorly edited to make this. (https://github.com/abtalerico/wd-hydrus-tagger) (deleted, copy can be found at  https://github.com/Garbevoir/wd-e621-hydrus-tagger/tree/main)
 - Zack3d (furzacky) for the E621 tagging model. (https://discord.com/channels/754509198674362388/1065785788698218526) (https://discord.gg/BDFpq9Yb7K)
 - Hydrus Dev for developing and improving hydrus nonstop for several years, the real G.O.A.T. (https://hydrusnetwork.github.io/hydrus/index.html)
