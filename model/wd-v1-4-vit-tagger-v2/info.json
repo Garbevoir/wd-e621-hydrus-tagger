@@ -1,0 +1,8 @@
+{
+	"modelname": "WD V1.4 Vit V2 Tagger",
+	"source": "SmilingWolf",
+	"modelfile": "model.onnx",
+	"tagsfile": "selected_tags.csv",
+	"ratingsflag": 1,
+	"numberofratings": 4
+}

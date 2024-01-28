@@ -1,6 +1,13 @@
-# It's recommended to quickly read README-ORIGINAL.md, as that was the original readme file included with the tool. Specifically note the requirements section, as they are the same here.
+# README-ORIGINAL.md is here for legacy purposes. It's information is quite outdated. See below for up-to-date help.
 
 If the root folder (the folder this .md file is in) has moved or has been renamed, delete the venv folder if it exists and follow first time installation instructions.
+
+## REQUIREMENTS:
+The original requirements for this tool called for either python 3.9.x or 3.10.x. However, I have gotten it to build in it's current form on python 3.11 (pip 22.3). As such, I recommend using python 3.11 to build. You should NOT use python 3.12 as it has removed distutils, which is necessary for some of the dependencies and I don't know how I'd go about fixing everything that has broken. Sorry. Anyways:
+
+* Python 3.11.x
+* Hydrus Network with API key
+* A willingness to google stuff when things go wrong
 
 ## FOR FIRST TIME INSTALLATION:
 1. Open root folder (folder with this .md file) in cmd and run "python -m venv venv" without quotes
@@ -9,6 +16,9 @@ If the root folder (the folder this .md file is in) has moved or has been rename
 
 ## DOWNLOADING THE MODELS:
 This edit of the tool specifically uses local downloads of the model instead of cache downloads from the internet. This means you will need to download the models yourself. You can find the models by navigating to their specific folder in the models folder and reading the .txt file.
+
+## INFO.JSON:
+In the two pre-made model folders are info.json files. These inform the tagger of what tagging model is being loaded as well as what it's capabilities are. This is important for certain functions such as tagging only the content rating (safe, explicit, etc.) If you want to use new models that don't have a folder created by default, all you need to do is make a new folder with the new model's .onnx and .csv file in it, then create an info.json with the correct info for it.
 
 ## HYDRUS PREPARATION:
 1. In Hydrus, navigate to services > manage services
@@ -72,38 +82,86 @@ I recommend starting with a single file, and testing wd.bat, e621.bat, and ratin
 4. (optional) If you need or want to, you can run ratings.bat to only get ratings tags, no content tags
 
 
+## Running in CLI
+### Evaluate a file
+```bash
+python -m wd-hydrus-tagger evaluate /path/to/file
+```
+#### Options:
+```
+  --cpu BOOLEAN      Use CPU instead of GPU
+  --model TEXT       The tagging model to use
+  --threshold FLOAT  The threshhold to drop tags below
+```
+
+### Evaluate a file in Hydrus
+```bash
+python -m wd-hydrus-tagger evaluate-api --token your_hydrus_token 123_your_files_hash_456
+```
+#### Options:
+```
+  --token TEXT        The API token for your Hydrus server
+  --cpu BOOLEAN       Use CPU instead of GPU
+  --model TEXT        The tagging model to use
+  --threshold FLOAT   The threshhold to drop tags below
+  --host TEXT         The URL for your Hydrus server
+  --tag-service TEXT  The tag service to send tags that match the threshold to
+  --ratings-only BOOL Drop all tags except for those that identify the content rating
+  --privacy BOOL      Show or hide the tag output to the cli
+```
+
+### Evaluate a number of files in Hydrus
+```bash
+python -m wd-hydrus-tagger evaluate-api-batch --token your_hydrus_token hashes.txt
+```
+Where hashes.txt is a file containing one Hydrus file hash per line.
+
+#### Options:
+```
+  --token TEXT        The API token for your Hydrus server
+  --cpu BOOLEAN       Use CPU instead of GPU
+  --model TEXT        The tagging model to use
+  --threshold FLOAT   The threshhold to drop tags below
+  --host TEXT         The URL for your Hydrus server
+  --tag-service TEXT  The tag service to send tags that match the threshold to
+  --ratings-only BOOL Drop all tags except for those that identify the content rating
+  --privacy BOOL      Show or hide the tag output to the cli
+```
 
 ## RANDOM INFO:
 Everything has been edited to work on a Windows 10 Pro installation. Your mileage may vary on other operating systems.
 If you do run into problems on other operating systems, the culprit is likely in interrogate.py, specifically where path() is invoked or it's something to do with the .bat files and how they're written.
 
-e621.bat uses an edited \_\_main__.py and interrogate.py that doesn't have any ratings handling as the e621 model doesn't tag ratings.
-ratings.bat runs the normal wd model which DOES tag ratings, but discards all tags except for the ratings.
+e621.bat uses an e621 model that doesn't tag content ratings but should provide much more accurate tags for furry artwork. For example, where an anthropomorphic dragon would be tagged "demon girl" by the WD tagger, e621 will properly recognize it as an anthropomorphic dragon and tag it as such.
+ratings.bat runs the normal WD model which DOES tag ratings, but discards all tags except for the ratings.
 It's recommended to run ratings.bat AFTER running e621.bat so that furry art can be tagged with more accurate tags as well as a rating tag.
-Note that this is UNNECESSARY if wd.bat is ran on the file FIRST, as it will already have a rating tag.
-
-you can have wd-hydrus-tagger discard all tags except for content ratings by adding "--ratings-only 1" to the command. This is what ratings.bat does. you can also use this for evaluate-api as well for individual hashes.
+Note that this is UNNECESSARY if wd.bat is ran on the file FIRST, as it will already have a rating tag. (unless you decide to delete the WD tags afterwards)
 
 All modules have been edited to automatically add an "ai generated tags" tag to the file thats specific to which tagger was run.
-All .bat files use evaluate-api-batch, meaning to check individual files you MUST use hashes.txt.
+All .bat files use evaluate-api-batch, meaning to check individual files you MUST use hashes.txt or enter the command yourself.
 
-If you don't need furry or rating tagging capability, simply delete e621.bat/ratings.bat, as well as the e621-hydrus-tagger folder folder
-You can also delete the Z3D-E621-Convnext folder from the models folder if not needed.
+If you don't need furry or rating tagging capability, simply delete e621.bat/ratings.bat, as well as the Z3d-E621-Convnext folder
 
 My personal workflow is to have a hydrus search page that excludes all AI tags, filters to only PNG/JPG/WEBP images, and only images with less than 10 tags already (to avoid tagging already well-tagged files.) I also limit the results to around 2048 images, since that takes roughly an hour to process on my system.
 After tagging EVERYTHING with wd.bat, there will be some files that have been tagged with "furry" or "female furry".
 I then have another search page that collects all these newly identified furry files, and I run e621.bat on them after a sufficient amount is identified.
 
 I personally don't understand the difference between the different ViT/Convnext/MOAT tagging models, and since ViT was the default included with the tool, it's what I've been using.
-If you prefer a different model for some reason, then just replace the "model.onnx" and "selected_tags.csv" files in the "wd-v1-4-vit-tagger-v2" folder with the ones you downloaded. I don't recommend renaming the folder, since the program looks specifically for the "wd-v1-4-vit-tagger-v2" folder to find the model.
+
+If you prefer a different model for some reason, then just create a new folder in the /model/ folder, put your .onnx and .csv file in there, then copy and paste an info.json from another folder and edit it appropriately. Then you can edit or copy wd.bat and change the folder being pointed to from "wd-v1-4-vit-tagger-v2" to whatever you named your new folder. alternatively, you could just replace the "model.onnx" and "selected_tags.csv" files in the "wd-v1-4-vit-tagger-v2" folder with the ones you downloaded. I don't recommend this since it could lead to confusion on what model is actually being ran as well as overwriting the original tagging model, but if it's similar enough it should work okay.
 
 You can have each .bat send the tags to their own personal tag service if you'd like, just create a new tag service and change the .bat file to point to the new tag service. This might be useful if you want to delete wd-hydrus-tagger tags from furry files, or delete a tag service if/when a new, better tagging model for anime/furry art comes out so you can re-tag everything.
 
+As of the latest version of this tagging tool, the way that the "ai generated tags" tags are made is different, meaning they very likely wont match the tags given to already processed files. I recommend sibling-ing the previous tag to the newly created one, or vice versa.
+
+Ages ago I tried setting up the required tools to utilize my GPU for tagging. Unfortunately I've forgotten most of the steps to accomplish this, but what I remembered involved installing software outside the venv from nvidia. I also remember that it's not possible to include the software with the venv via requirements.txt. The results were actually pretty good, I went from processing 2048 files in 2 hours to doing 8192 in about the same amount of time. Of course, my GPU sounded like a jet engine the entire time, so I don't really recommend it if you plan to run it all night. 
+
+Python 3.12 seems to have severely broken some of the dependencies used by this tool. Perhaps with enough fiddling and changing required package versions it might work, but it's much easier to just use python 3.11. python 3.10 might also work, but I believe the latest version of onnxruntime as well as a couple other packages that were updated require atleast python 3.11.
 
 YOU MUST REBUILD THE VENV IF YOU MOVE OR RENAME THIS FOLDER
 
 # CREDITS:
 - SmilingWolf for the WD tagging models as well as some simple code to detect Kaomojis. (https://huggingface.co/SmilingWolf)
-- Abtalerico for the well made original tool that I poorly edited to make this. (https://github.com/abtalerico/wd-hydrus-tagger
+- Abtalerico for the well made original tool that I poorly edited to make this. (https://github.com/abtalerico/wd-hydrus-tagger) (deleted, copy can be found at  https://github.com/Garbevoir/wd-e621-hydrus-tagger/tree/main)
 - Zack3d (furzacky) for the E621 tagging model. (https://discord.com/channels/754509198674362388/1065785788698218526) (https://discord.gg/BDFpq9Yb7K)
 - Hydrus Dev for developing and improving hydrus nonstop for several years, the real G.O.A.T. (https://hydrusnetwork.github.io/hydrus/index.html)
