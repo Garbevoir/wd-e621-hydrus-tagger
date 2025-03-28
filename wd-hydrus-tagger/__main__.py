@@ -1,11 +1,16 @@
+import json
 import os.path
+import subprocess
+import tempfile
+from io import BytesIO
+from typing import Union
 
 import click
-from PIL import Image, ImageFile
-from . import interrogate
 import hydrus_api
-from io import BytesIO
-import json
+import magic
+from PIL import Image, ImageFile
+
+from . import interrogate
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -30,6 +35,70 @@ kaomojis = [
     "|_|",
     "||_||",
 ]
+
+
+def extract_webm_image(input_byte_or_path: Union[BytesIO, str]) -> Image.Image:
+    with (
+        tempfile.NamedTemporaryFile(suffix=".webm") as temp_input,
+        tempfile.NamedTemporaryFile(suffix=".png") as temp_output,
+    ):
+        if isinstance(input_byte_or_path, BytesIO):
+            temp_input.write(input_byte_or_path.getvalue())
+            temp_input.flush()
+            input_path = temp_input.name
+        else:
+            input_path = input_byte_or_path
+
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-i",
+            input_path,
+            "-vframes",
+            "1",
+            "-q:v",
+            "2",
+            temp_output.name,
+        ]
+
+        res = subprocess.run(
+            cmd,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        if res.returncode:
+            print(res.stderr.decode())
+            raise RuntimeError()
+
+        out_img: Image.Image = Image.open(temp_output.name)
+        out_img.load()
+
+        return out_img
+
+
+def get_image(bytes: BytesIO) -> Image.Image:
+    mime_type = magic.from_buffer(bytes.read(2048), mime=True)
+    bytes.seek(0)
+
+    # print(f"Got mime type {mime_type}")
+
+    if mime_type.startswith("image"):
+        image = Image.open(bytes)
+        return image
+
+    elif mime_type.startswith("application"):
+        header = bytes.read(16)
+        bytes.seek(0)
+
+        # print(f"Got header: {header}")
+
+        if header.startswith(b"\x1a\x45\xdf\xa3"):  # WEBM
+            return extract_webm_image(bytes)
+
+    raise ValueError("Unknown filetype!")
+
 
 @click.group()
 def cli():
@@ -106,8 +175,10 @@ def evaluate_api(hash, token, cpu, model, threshold, host, tag_service, ratings_
     )
     integerator.load(cpu)
     client = hydrus_api.Client(token, host)
-    image_bytes = BytesIO(client.get_file(hash).content)
-    image = Image.open(image_bytes)
+
+    bytes = BytesIO(client.get_file(hash).content)
+    image = get_image(bytes)
+
     ratings, tags = integerator.interrogate(image)
     rating = "none"
     if modelinfo['ratingsflag']: 
@@ -126,7 +197,9 @@ def evaluate_api(hash, token, cpu, model, threshold, host, tag_service, ratings_
         click.echo("rating: " + rating)
         click.echo("tags: " + ", ".join(clipped_tags))
 
-    if modelinfo['ratingsflag']: clipped_tags.append("rating:" + rating)
+    if modelinfo["ratingsflag"]:
+        clipped_tags.append("rating:" + rating)
+        
     if ratings_only:
         clipped_tags.append("ratings only " + modelinfo['modelname'] + " ai generated tags") # create tag specifying that content tags were excluded
     else:
@@ -175,8 +248,10 @@ def evaluate_api_batch(hashfile, token, cpu, model, threshold, host, tag_service
     with click.progressbar(hashes) as bar:
         for hash in bar:
             click.echo(" processing: "+ hash)
-            image_bytes = BytesIO(client.get_file(hash).content)
-            image = Image.open(image_bytes)
+
+            bytes = BytesIO(client.get_file(hash).content)
+            image = get_image(bytes)
+
             ratings, tags = integerator.interrogate(image)
             rating = "none"
             if modelinfo['ratingsflag']: 
