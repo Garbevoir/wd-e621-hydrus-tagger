@@ -30,4 +30,5 @@ tifffile==2023.2.3
 tqdm==4.64.1
 typing_extensions==4.4.0
 urllib3==1.26.18
+python-magic==0.4.27
 git+https://github.com/KichangKim/DeepDanbooru@master
