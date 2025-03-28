@@ -92,10 +92,6 @@ class WaifuDiffusionInterrogator:
         Dict[str, float],  # rating confidents
         Dict[str, float],  # tag confidents
     ]:
-        # init model
-        if not hasattr(self, "model") or self.model is None:
-            self.load()
-
         # code for converting the image and running the model is taken from the link below
         # thanks, SmilingWolf!
         # https://huggingface.co/spaces/SmilingWolf/wd-v1-4-tags/blob/main/app.py
