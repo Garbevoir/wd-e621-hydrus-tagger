@@ -199,7 +199,7 @@ def evaluate_api(hash, token, cpu, model, threshold, host, tag_service, ratings_
 
     if modelinfo["ratingsflag"]:
         clipped_tags.append("rating:" + rating)
-        
+
     if ratings_only:
         clipped_tags.append("ratings only " + modelinfo['modelname'] + " ai generated tags") # create tag specifying that content tags were excluded
     else:
@@ -247,10 +247,14 @@ def evaluate_api_batch(hashfile, token, cpu, model, threshold, host, tag_service
 
     with click.progressbar(hashes) as bar:
         for hash in bar:
-            click.echo(" processing: "+ hash)
+            click.echo(" processing: " + hash)
 
-            bytes = BytesIO(client.get_file(hash).content)
-            image = get_image(bytes)
+            try:
+                bytes = BytesIO(client.get_file(hash).content)
+                image = get_image(bytes)
+            except ValueError as e:
+                print(e)
+                continue
 
             ratings, tags = integerator.interrogate(image)
             rating = "none"
