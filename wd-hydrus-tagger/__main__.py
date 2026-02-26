@@ -206,6 +206,71 @@ def evaluate_api_batch(hashfile, token, cpu, model, threshold, host, tag_service
                 tag_service: clipped_tags
             })
 
+@click.command()
+@click.argument('search_tags', nargs=-1)
+@click.option("--token", help="The API token for your Hydrus server")
+@click.option("--cpu", default=False, help="Use CPU instead of GPU")
+@click.option("--model", default="wd-v1-4-vit-tagger-v2", help="The tagging model to use")
+@click.option("--threshold", default=0.35, help="The threshhold to drop tags below")
+@click.option("--host", default="http://127.0.0.1:45869", help="The URL for your Hydrus server ")
+@click.option("--tag-service", default="A.I. Tags", help="The Hydrus tag service to add tags to")
+@click.option('--search-tag-service', default='all known tags', help='Tag domain on which to search.', show_default=True)
+@click.option("--ratings-only", default=False, help="Strip all tags except for content rating")
+@click.option("--privacy", default=True, help="hides the tag output from the cli")
+def evaluate_api_search(search_tags, token, cpu, model, threshold, host, tag_service, search_tag_service, ratings_only, privacy):
+    with open('./model/' + model + '/info.json') as json_f:
+        modelinfo = json.load(json_f)
+
+    if ratings_only and not modelinfo['ratingsflag']:
+        raise ValueError("--ratings-only set, but model does not support ratings!")
+
+    integerator = interrogate.WaifuDiffusionInterrogator(
+        modelinfo['modelname'], # the name of the model for display purposes
+        modelinfo['modelfile'], # the filename of the model file
+        modelinfo['tagsfile'], # the filename of the tags file
+        model, # the folder storing the previous two files as well as the info file
+		modelinfo['ratingsflag'], # flag indicating whether model identifies content rating
+		modelinfo['numberofratings'], # amount of tags to consider for content rating if so
+        repo_id=modelinfo['source'], # source of the model, credit where credit is due
+    )
+    integerator.load(cpu)
+    client = hydrus_api.Client(token, host)
+
+    hashes = list(client.search_files(tags = search_tags, return_hashes = True, tag_service_name = search_tag_service))
+    with click.progressbar(hashes) as bar:
+        for hash in bar:
+            click.echo(" processing: "+ hash)
+            image_bytes = BytesIO(client.get_file(hash).content)
+            image = Image.open(image_bytes)
+            ratings, tags = integerator.interrogate(image)
+            rating = "none"
+            if modelinfo['ratingsflag']:
+                ratings["none"] = 0.0 # assign none a value of zero so that rating comparison can still occur
+                for key in ratings.keys():
+                    if ratings[key] > ratings[rating]:
+                        rating = key
+            clipped_tags = []
+
+            if not ratings_only:
+                for key in tags.keys():
+                    if (tags[key] > threshold):
+                        clipped_tags.append(key.replace("_", " ") if key not in kaomojis else key)
+
+            if not privacy:
+                click.echo("rating: " + rating)
+                click.echo("tags: " + ", ".join(clipped_tags))
+                click.echo()
+
+            if modelinfo['ratingsflag']: clipped_tags.append("rating:" + rating)
+            if ratings_only:
+                clipped_tags.append("ratings only " + modelinfo['modelname'] + " ai generated tags") # create tag specifying that content tags were excluded
+            else:
+                clipped_tags.append(modelinfo['modelname'] + " ai generated tags")
+
+            client.add_tags(hashes=[hash], service_names_to_tags={
+                tag_service: clipped_tags
+            })
+
 
 if __name__ == '__main__':
     Image.init()
@@ -213,4 +278,5 @@ if __name__ == '__main__':
     cli.add_command(evaluate)
     cli.add_command(evaluate_api)
     cli.add_command(evaluate_api_batch)
+    cli.add_command(evaluate_api_search)
     cli()

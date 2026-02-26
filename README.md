@@ -154,7 +154,22 @@ Where hashes.txt is a file containing one Hydrus file hash per line.
   --ratings-only BOOL Drop all tags except for those that identify the content rating
   --privacy BOOL      Show or hide the tag output to the cli
 ```
-
+### Evaluate files with specified tags
+```bash
+python -m wd-hydrus-tagger evaluate-api-search --token your_hydrus_token "tag 1" "tag 2"...
+```
+#### Options:
+```
+  --token TEXT              The API token for your Hydrus server
+  --cpu BOOLEAN             Use CPU instead of GPU
+  --model TEXT              The tagging model folder to use
+  --threshold FLOAT         The threshhold to drop tags below
+  --host TEXT               The URL for your Hydrus server
+  --tag-service TEXT        The tag service to send tags that match the threshold to.
+  --search-tag-service TEXT The tag service that specified tags will be searched within.
+  --ratings-only BOOL       Drop all tags except for those that identify the content rating
+  --privacy BOOL            Show or hide the tag output to the cli
+```
 ## RANDOM INFO:
 Everything has been confirmed to work on various Windows 10 installations. I've also read about other people getting everything (except GPU utilization) working on various linux distributions by changing the .bat files.
 If you do run into problems on other operating systems, the culprit is likely in interrogate.py, specifically where path() is invoked or it's something to do with the .bat files and how they're written.
