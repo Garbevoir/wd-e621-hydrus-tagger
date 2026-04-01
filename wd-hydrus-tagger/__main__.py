@@ -6,6 +6,8 @@ from . import interrogate
 import hydrus_api
 from io import BytesIO
 import json
+import imageio.v3 as iio
+import numpy as np
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -29,6 +31,11 @@ kaomojis = [
     "x_x",
     "|_|",
     "||_||",
+    ":d",
+    ":3",
+    ":o",
+    ";d",
+    ":>="
 ]
 
 @click.group()
@@ -175,9 +182,43 @@ def evaluate_api_batch(hashfile, token, cpu, model, threshold, host, tag_service
     with click.progressbar(hashes) as bar:
         for hash in bar:
             click.echo(" processing: "+ hash)
-            image_bytes = BytesIO(client.get_file(hash).content)
-            image = Image.open(image_bytes)
-            ratings, tags = integerator.interrogate(image)
+            file = client.get_file(hash).content
+            metadata = client.get_file_metadata(hashes=[hash])
+            num_frames = metadata[0]["num_frames"]
+            if num_frames == None:
+                image = Image.open(BytesIO(file))
+                ratings, tags = integerator.interrogate(image)
+                threshold_local = threshold
+            else:
+                if num_frames >= 7:
+                    frames_indxes = np.round(np.linspace(0,num_frames, 7)[1:-1]) #five frames to analyze video
+                else:
+                    frames_indxes = [np.round(num_frames/2)]
+                ratings, tags = {}, {}
+                threshold_local = threshold*2
+                try:
+                    for index in frames_indxes:
+                        frame = iio.imread(BytesIO(file), extension=metadata[0]["ext"], index=int(index))
+                        image = Image.fromarray(frame)
+                        #image.show()
+                        rate, tag = integerator.interrogate(image)
+                        
+                        for r in rate:
+                            if r not in ratings:
+                                ratings[r] = rate[r]
+                            else:
+                                ratings[r] += rate[r]
+                        
+                        for t in tag:
+                            if t not in tags:
+                                tags[t] = tag[t]
+                            else:
+                                tags[t] += tag[t]
+                except BaseException as e:
+                    click.echo(" failed to decode: "+ hash)
+                    click.echo(e)
+                    continue
+            
             rating = "none"
             if modelinfo['ratingsflag']: 
                 ratings["none"] = 0.0 # assign none a value of zero so that rating comparison can still occur
@@ -188,7 +229,7 @@ def evaluate_api_batch(hashfile, token, cpu, model, threshold, host, tag_service
 
             if not ratings_only:
                 for key in tags.keys():
-                    if (tags[key] > threshold):
+                    if (tags[key] > threshold_local):
                         clipped_tags.append(key.replace("_", " ") if key not in kaomojis else key)
 
             if not privacy:
