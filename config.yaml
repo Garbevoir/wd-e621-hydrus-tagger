@@ -1,0 +1,15 @@
+## Example config for wd-e621-hydrus-tagger
+# CLI flags always override these settings.
+# Required for any Hydrus API commands
+
+## Pasteyour hydrus API token below
+token: YOUR_HYDRUS_API_TOKEN_HERE
+
+## Optional flags — these are the defaults
+host: "http://127.0.0.1:45869"
+model: "wd-eva02-large-tagger-v3"
+threshold: 0.6
+tag_service: "A.I tagger"
+cpu: true
+ratings_only: false
+privacy: true

@@ -5,7 +5,7 @@ coloredlogs==15.0.1
 filelock==3.9.0
 flatbuffers==23.1.21
 humanfriendly==10.0
-hydrus-api==4.0.0
+hydrus-api==5.3
 idna==3.4
 imageio==2.27.0
 modules==1.0.0
@@ -14,7 +14,7 @@ networkx==3.0
 numpy==1.26.2
 opencv-contrib-python==4.7.0.68
 packaging==23.0
-pandas==1.5.3
+pandas < 3
 Pillow==10.0.1
 protobuf==4.21.12
 python-dateutil==2.8.2
@@ -31,3 +31,5 @@ tqdm==4.64.1
 typing_extensions==4.4.0
 urllib3==1.26.18
 git+https://github.com/KichangKim/DeepDanbooru@master
+onnxruntime-gpu
+av

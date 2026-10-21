@@ -1,0 +1,1 @@
+system:duration < 1 minute 0 seconds

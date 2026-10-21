@@ -2,6 +2,13 @@ import os
 import pandas as pd
 import numpy as np
 import re
+import click
+
+session_debug = []
+
+def debug(msg):
+    click.echo(msg)
+    session_debug.append(msg)
 
 from typing import Tuple, Dict
 from PIL import Image
@@ -39,39 +46,54 @@ class WaifuDiffusionInterrogator:
         self.kwargs = kwargs
 
     def findpaths(self) -> Tuple[os.PathLike, os.PathLike]:
-        print(f"Loading {self.name} model file from {self.kwargs['repo_id']}")
+        debug(f"DEBUG: Loading {self.name} model file from {self.kwargs['repo_id']}")
 
         model_file = Path('./model/' + self.folder + '/' + self.model_file)
         tags_file = Path('./model/' + self.folder + '/' + self.tags_file)
         return model_file, tags_file
 
-    def load(self, cpu) -> None:                             #im pretty sure this just checks for the right onnx runtime package and downloads it if its missing, no clue why this cant be done on initial setup
+    def load(self, cpu=True) -> None:
         model_file, tags_file = self.findpaths()
+        debug(f"DEBUG: model path = {model_file}")
+        debug(f"DEBUG: model exists = {model_file.exists()}")
+        debug(f"DEBUG: tags path = {tags_file}")
+        debug(f"DEBUG: tags exists = {tags_file.exists()}")
 
-        # only one of these packages should be installed at a time in any one environment
-        # https://onnxruntime.ai/docs/get-started/with-python.html#install-onnx-runtime
-        # TODO: remove old package when the environment changes?
-        if not onnx_loader.is_installed('onnxruntime'):
-            package = os.environ.get(
-                'ONNXRUNTIME_PACKAGE',
-                'onnxruntime-gpu'
-            )
+        debug("DEBUG: checking if onnxruntime is installed...")
+        installed = onnx_loader.is_installed('onnxruntime')
+        debug(f"DEBUG: onnxruntime installed = {installed}")
 
+        if not installed:
+            debug("DEBUG: onnxruntime not found, attempting install...")
+            package = os.environ.get('ONNXRUNTIME_PACKAGE', 'onnxruntime-gpu')
             onnx_loader.run_pip(f'install {package}', 'onnxruntime')
 
-        from onnxruntime import InferenceSession
+        debug("DEBUG: about to import onnxruntime...")
+        try:
+            import onnxruntime
+            debug(f"DEBUG: onnxruntime imported, version = {onnxruntime.__version__}")
+            InferenceSession = onnxruntime.InferenceSession
+            debug("DEBUG: InferenceSession obtained")
+        except Exception as e:
+            debug("DEBUG: import failed!")
+            click.echo(repr(e))
+            raise
 
-        # https://onnxruntime.ai/docs/execution-providers/
-        # https://github.com/toriato/stable-diffusion-webui-wd14-tagger/commit/e4ec460122cf674bbf984df30cdb10b4370c1224#r92654958
         providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
         if cpu:
             providers.pop(0)
+        debug(f"DEBUG: using providers = {providers}")
 
-        self.model = InferenceSession(str(model_file), providers=providers)
-
-        print(f'Loaded {self.name} model from {model_file}')
+        try:
+            self.model = InferenceSession(str(model_file), providers=providers)
+            click.echo(f'DEBUG: Loaded {self.name} model from {model_file}')
+        except Exception as e:
+            debug("DEBUG: InferenceSession failed!")
+            click.echo(repr(e))
+            raise
 
         self.tags = pd.read_csv(tags_file)
+        debug("DEBUG: tags CSV loaded")
 
     def interrogate(
             self,
@@ -80,6 +102,7 @@ class WaifuDiffusionInterrogator:
         Dict[str, float],  # rating confidents
         Dict[str, float]  # tag confidents
     ]:
+        # ... rest of the interrogate method stays the same ...
         # init model
         if not hasattr(self, 'model') or self.model is None:
             self.load()

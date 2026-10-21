@@ -1,0 +1,8 @@
+{
+	"modelname": "WD EVA02 Large Tagger v3",
+	"source": "SmilingWolf",
+	"modelfile": "model.onnx",
+	"tagsfile": "selected_tags.csv",
+	"ratingsflag": 1,
+	"numberofratings": 4
+}
